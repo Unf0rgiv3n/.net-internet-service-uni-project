@@ -1,0 +1,16 @@
+version: "3"
+services:
+  si_180152_rabbit:
+    image: rabbit:3-alpine
+  si_180152_app:
+    image: unf0rgiv33n/si_180152_app_dotnet
+    ports:
+      - "180152:80"
+    restart: on-failure
+    depends_on:
+      - si_180152_rabbit
+  si_180152_generator:
+    image: unf0rgiv33n/si_180152_app_generator
+    restart: on-failure
+    depends_on:
+      - si_180152_rabbit
