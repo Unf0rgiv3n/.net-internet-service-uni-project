@@ -1,7 +1,7 @@
 version: "3"
 services:
   si_180152_rabbit:
-    image: rabbit:3-alpine
+    image: rabbitmq:alpine
   si_180152_app:
     image: unf0rgiv33n/si_180152_app_dotnet
     ports:
