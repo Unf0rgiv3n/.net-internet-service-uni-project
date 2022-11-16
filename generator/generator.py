@@ -84,15 +84,11 @@ class NoiseSensor(Sensor):
     def generate_measurement(self):
         self.measurement = random.randrange(251)
 
-def send_msg(sensor: Sensor):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('si_180152_rabbit'))
-    channel = connection.channel()
-    queue_name = f'sensor-{sensor.type.name}'
-    channel.queue_declare(queue=queue_name)
+def send_msg(sensor: Sensor, channel):
+    queue_name = f'sensor-{sensor.type}'
     channel.basic_publish(exchange='',
         routing_key=queue_name,
         body=json.dumps(sensor.__dict__))
-    connection.close()
 
 def generate_sensor():
     id = 1
@@ -123,10 +119,20 @@ def generate_sensor_list():
 
 if __name__ == '__main__':
     sensor_list = generate_sensor_list()
+    time.sleep(30)
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters('si_180152_rabbit'))
+    channel = connection.channel()
+    channel.queue_declare(queue='sensor-HUMIDITY')
+    channel.queue_declare(queue='sensor-INSOLATION')
+    channel.queue_declare(queue='sensor-TEMPERATURE')
+    channel.queue_declare(queue='sensor-NOISE')
 
     for i in range(2000):
         rnd_sensor = random.choice(sensor_list)
         rnd_sensor.generate_measurement()
-        send_msg(rnd_sensor)
-        time.sleep(5)
+        send_msg(rnd_sensor, channel)
+        time.sleep(10)
+    
+    connection.close()
     

@@ -1,16 +1,26 @@
 version: "3"
 services:
-  si_180152_rabbit:
+  rabbit:
     image: rabbitmq:3-alpine
-  si_180152_app:
-    image: si_180152_app_dotnet
+    networks:
+      - main
+  app:
+    image: unf0rgiv33n/si_180152_app_dotnet
+    networks:
+      - main
     ports:
       - "18015:80"
     restart: on-failure
     depends_on:
       - si_180152_rabbit
-  si_180152_generator:
-    image: si_180152_app_generator
+  generator:
+    image: unf0rgiv33n/si_180152_app_generator
+    networks:
+      - main
     restart: on-failure
     depends_on:
       - si_180152_rabbit
+
+networks:
+  main:
+    driver: overlay
