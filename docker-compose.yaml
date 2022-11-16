@@ -12,14 +12,14 @@ services:
       - "18015:80"
     restart: on-failure
     depends_on:
-      - si_180152_rabbit
+      - rabbit
   generator:
     image: unf0rgiv33n/si_180152_app_generator
     networks:
       - main
     restart: on-failure
     depends_on:
-      - si_180152_rabbit
+      - rabbit
 
 networks:
   main:
