@@ -354,3 +354,6 @@ DotNet/.idea
 
 DotNet/DotNet/bin
 DotNet/DotNet/obj
+
+
+.vscode/*
