@@ -10,6 +10,8 @@ public class Sensor
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; }
     [JsonInclude]
+    public int SensorId { get; set; }
+    [JsonInclude]
     public string Name { get; set; }
     [JsonInclude]
     public string Desc { get; set; }

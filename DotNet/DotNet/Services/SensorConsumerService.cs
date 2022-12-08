@@ -45,11 +45,18 @@ public class SensorConsumerService: BackgroundService
         var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += (model, ea) =>
         {
-            var body = ea.Body.ToArray();
-            var message = Encoding.UTF8.GetString(body);
-            Console.WriteLine("Received sensor {0}", message);
-            var newObject = JsonSerializer.Deserialize<Sensor>(message);
-            _service.Create(newObject);
+            try
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                Console.WriteLine("Received sensor {0}", message);
+                var newObject = JsonSerializer.Deserialize<Sensor>(message);
+                _service.Create(newObject);
+            } 
+            catch (Exception e)
+            {
+                Console.WriteLine("{0} Exception caught.", e);
+            }
         };
         _channel.BasicConsume(queue: "sensor",
             autoAck: true,
