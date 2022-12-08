@@ -1,26 +1,31 @@
 version: "3"
 services:
-  rabbit:
+  si_180152_rabbit:
     image: rabbitmq:3-alpine
-    networks:
-      - main
-  app:
-    image: unf0rgiv33n/si_180152_app_dotnet
-    networks:
-      - main
+  si_180152_app:
+    build: ./DotNet/DotNet
     ports:
       - "18015:80"
     restart: on-failure
     depends_on:
-      - rabbit
-  generator:
-    image: unf0rgiv33n/si_180152_app_generator
-    networks:
-      - main
+      - si_180152_rabbit
+  si_180152_generator:
+    build: ./generator
     restart: on-failure
     depends_on:
-      - rabbit
-
-networks:
-  main:
-    driver: overlay
+      - si_180152_rabbit
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017
