@@ -112,11 +112,11 @@ if __name__ == '__main__':
     sensor_list = generate_sensor_list()
     time.sleep(30)
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters('si_180152_rabbit'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit'))
     channel = connection.channel()
     channel.queue_declare(queue='sensor')
 
-    for i in range(2000):
+    for i in range(3000):
         rnd_sensor = random.choice(sensor_list)
         rnd_sensor.generate_measurement()
         send_msg(rnd_sensor, channel)
