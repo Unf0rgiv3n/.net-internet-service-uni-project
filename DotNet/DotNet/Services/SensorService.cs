@@ -23,21 +23,20 @@ public class SensorService
         if (order.ToLower() == "desc")
         {
             
-            return _sensorList.Find(x => x.Name.Contains(name)).SortByDescending(x => x.Measurement).ThenByDescending(x=>x.Measurement).ToList();
+            return _sensorList.Find(x => x.Name.Contains(name)).ToList().OrderByDescending(x=>x.Measurement).ToList();
         }
 
-        return _sensorList.Find(x => x.Name.Contains(name))..SortBy(x => x.Measurement).ThenBy(x=>x.Measurement).ToList();
+        return _sensorList.Find(x => x.Name.Contains(name)).ToList().OrderBy(x => x.Measurement).ToList();
     }
     
     public List<Sensor> GetByRoom(string room, string order)
     {
         if (order.ToLower() == "desc")
         {
-            
-            return _sensorList.Find(x => x.Desc.Contains(room)).SortByDescending(x => x.Measurement).ThenByDescending(x=>x.Measurement).ToList();
+            return _sensorList.Find(x => x.Desc.Contains(room)).ToList().OrderByDescending(x=>x.Measurement).ToList();
         }
 
-        return _sensorList.Find(x => x.Desc.Contains(room)).SortBy(x => x.Measurement).ThenBy(x=>x.Measurement).ToList();
+        return _sensorList.Find(x => x.Desc.Contains(room)).ToList().OrderBy(x => x.Measurement).ToList();
     }
     
     public List<Sensor> GetByType(string type, string order)
@@ -45,10 +44,10 @@ public class SensorService
         if (order.ToLower() == "desc")
         {
             
-            return _sensorList.Find(x => x.Type.Contains(type.ToUpper())).SortByDescending(x => x.Measurement).ThenByDescending(x=>x.Measurement).ToList();
+            return _sensorList.Find(x => x.Type.Contains(type.ToUpper())).ToList().OrderByDescending(x=>x.Measurement).ToList();
         }
 
-        return _sensorList.Find(x => x.Type.Contains(type.ToUpper())).SortBy(x => x.Measurement).ThenBy(x=>x.Measurement).ToList();
+        return _sensorList.Find(x => x.Type.Contains(type.ToUpper())).ToList().OrderBy(x => x.Measurement).ToList();
     }
     
     public Sensor Create(Sensor sensor)
