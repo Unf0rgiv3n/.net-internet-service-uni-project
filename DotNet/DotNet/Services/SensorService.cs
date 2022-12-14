@@ -26,7 +26,7 @@ public class SensorService
             return _sensorList.Find(x => x.Name.Contains(name)).SortByDescending(x => x.Measurement).ThenByDescending(x=>x.Measurement).ToList();
         }
 
-        return _sensorList.Find(x => x.Name.Contains(name))..SortBy(x => x.Measurement).ThenBy(x=>x.Measurement).ToList();
+        return _sensorList.Find(x => x.Name.Contains(name)).SortBy(x => x.Measurement).ThenBy(x=>x.Measurement).ToList();
     }
     
     public List<Sensor> GetByRoom(string room, string order)

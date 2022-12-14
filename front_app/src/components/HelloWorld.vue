@@ -1,155 +1,179 @@
 <template>
   <v-container>
-    <v-row class="text-center">
-      <v-col cols="12">
-        <v-img
-          :src="require('../assets/logo.svg')"
-          class="my-3"
-          contain
-          height="200"
-        />
-      </v-col>
-
-      <v-col class="mb-4">
-        <h1 class="display-2 font-weight-bold mb-3">
-          Welcome to Vuetifyyyyyyyyy
-        </h1>
-
-        <p class="subheading font-weight-regular">
-          For help and collaboration with other Vuetify developers,
-          <br>please join our online
-          <a
-            href="https://community.vuetifyjs.com"
-            target="_blank"
-          >Discord Community</a>
-        </p>
-      </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-3">
-          What's next?
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(next, i) in whatsNext"
-            :key="i"
-            :href="next.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ next.text }}
-          </a>
-        </v-row>
-      </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-3">
-          Important Links
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(link, i) in importantLinks"
-            :key="i"
-            :href="link.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ link.text }}
-          </a>
-        </v-row>
-      </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-3">
-          Ecosystemss
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(eco, i) in ecosystem"
-            :key="i"
-            :href="eco.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ eco.text }}
-          </a>
-        </v-row>
-      </v-col>
-    </v-row>
+    <v-btn
+        @click="generateCSV()">DOWNLOAD CSV
+    </v-btn>
+    <v-btn
+        @click="generateJSON()">DOWNLOAD JSON
+    </v-btn>
+    <v-data-table
+        :headers="headers"
+        :items="values"
+        :items-per-page="5"
+        class="elevation-1"
+    ></v-data-table>
+    <v-text-field
+        v-model="measurementFilter"
+        type="number"
+        label="Less than"
+    ></v-text-field>
+    <v-select
+        v-model="sensorTypeFilter"
+        :items="types"
+        label="Select"
+        persistent-hint
+        single-line
+    ></v-select>
+    <canvas
+        class="chart--canvas"
+        id="myChart"
+    ></canvas>
   </v-container>
 </template>
 
 <script>
   import axios from 'axios'
+  import Chart from 'chart.js/auto';
+  
+  const chartAreaBorder = {
+    id: 'chartAreaBorder',
+    beforeDraw(chart, args, options) {
+      const { ctx, chartArea: { left, top, width, height } } = chart;
+      ctx.save();
+      ctx.strokeStyle = options.borderColor;
+      ctx.lineWidth = options.borderWidth;
+      ctx.setLineDash(options.borderDash || []);
+      ctx.lineDashOffset = options.borderDashOffset;
+      ctx.strokeRect(left, top, width, height);
+      ctx.restore();
+    },
+  };
+  
   export default {
     name: 'HelloWorld',
 
-    data: () => ({
-      ecosystem: [
-        {
-          text: 'vuetify-loader',
-          href: 'https://github.com/vuetifyjs/vuetify-loader',
-        },
-        {
-          text: 'github',
-          href: 'https://github.com/vuetifyjs/vuetify',
-        },
-        {
-          text: 'awesome-vuetify',
-          href: 'https://github.com/vuetifyjs/awesome-vuetify',
-        },
-      ],
-      importantLinks: [
-        {
-          text: 'Documentation',
-          href: 'https://vuetifyjs.com',
-        },
-        {
-          text: 'Chat',
-          href: 'https://community.vuetifyjs.com',
-        },
-        {
-          text: 'Made with Vuetify',
-          href: 'https://madewithvuejs.com/vuetify',
-        },
-        {
-          text: 'Twitter',
-          href: 'https://twitter.com/vuetifyjs',
-        },
-        {
-          text: 'Articles',
-          href: 'https://medium.com/vuetify',
-        },
-      ],
-      whatsNext: [
-        {
-          text: 'Explore components',
-          href: 'https://vuetifyjs.com/components/api-explorer',
-        },
-        {
-          text: 'Select a layout',
-          href: 'https://vuetifyjs.com/getting-started/pre-made-layouts',
-        },
-        {
-          text: 'Frequently Asked Questions',
-          href: 'https://vuetifyjs.com/getting-started/frequently-asked-questions',
-        },
-      ],
-    }),
+   data() {
+      return {
+        headers: [
+          {
+            text: 'Sensor type',
+            align: 'start',
+            sortable: false,
+            value: 'type',
+            filter: value => {
+              if (!this.sensorTypeFilter) return true
+
+              return value === this.sensorTypeFilter
+            },
+          },
+          { 
+            text: 'Sensor ID', 
+            value: 'name' 
+          },
+          { 
+            text: 'Measurement', 
+            value: 'measurement',
+            filter: value => {
+              if (!this.measurementFilter) return true
+
+              return value < parseInt(this.measurementFilter)
+            },
+          },
+          { 
+            text: 'Unit', 
+            value: 'unit' 
+          },
+        ],
+        values: [],
+        sensorTypeFilter:'',
+        measurementFilter:'',
+        types: ['INSOLATION', 'NOISE', 'TEMPERATURE', 'HUMIDITY', ''],
+      }
+   },
+    methods: {
+      generateCSV() {
+        console.log("generate csv");
+        let csv = 'Sensor type,Sensor ID,Measurement,Unit\n';
+        let a = []
+        if (this.sensorTypeFilter === '') {
+          a = this.values
+        }
+        else{
+          a = this.values.filter((x)=>{return x.type === this.sensorTypeFilter})
+        }
+        if (this.measurementFilter !== '') {
+          a = a.filter((x) => {
+            return x.value < parseInt(this.measurementFilter)
+          })
+        }
+        a.forEach((row) => {
+          csv += row.type
+          csv += ','
+          csv += row.name
+          csv += ','
+          csv += row.value
+          csv += ','
+          csv += row.unit
+          csv += "\n";
+        });
+        const anchor = document.createElement('a');
+        anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+        anchor.target = '_blank';
+        anchor.download = 'sensors.csv';
+        anchor.click();
+      },
+      generateJSON() {
+        console.log("generate json");
+      },
+      generatePlot() {
+        if (this.sensorTypeFilter) {
+          let stamps_o = this.values.filter((x)=>{return x.type === this.sensorTypeFilter})
+          let stamps = stamps_o.map(s => s.value)
+          let ctx = document.getElementById('myChart').getContext('2d');
+          this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              datasets: [
+                {
+                  color: '#fff',
+                  label: this.sensorTypeFilter,
+                  data: stamps,
+                  backgroundColor: '#003183',
+                  borderWidth: 2,
+                },
+              ],
+              labels: [...Array(stamps.length).keys()],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                chartAreaBorder: {
+                  borderColor: 'white',
+                  borderWidth: 0,
+                  borderDash: [0, 0],
+                  borderDashOffset: 2,
+                },
+              },
+            },
+            plugins: [chartAreaBorder],
+          });
+          this.chart.resize(0, window.innerHeight - 64 - 24 - 161 - 16 - 24);
+        }
+      }
+    },
     async created(){
       console.log(await (await axios.get("http://localhost:18015/sensor")).data);
-  }
+      this.values = await (await axios.get("http://localhost:18015/sensor")).data;
+    }
   }
 </script>
+
+<style>
+.chart--canvas {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 4px;
+  margin-top: 16px;
+}
+</style>
