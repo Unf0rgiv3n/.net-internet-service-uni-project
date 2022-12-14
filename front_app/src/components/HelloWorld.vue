@@ -24,30 +24,18 @@
         persistent-hint
         single-line
     ></v-select>
-    <canvas
-        class="chart--canvas"
-        id="myChart"
-    ></canvas>
+    <v-col class="col-12">
+      <canvas
+          class="chart--canvas"
+          id="myChart"
+      ></canvas>  
+    </v-col>
   </v-container>
 </template>
 
 <script>
   import axios from 'axios'
   import Chart from 'chart.js/auto';
-  
-  const chartAreaBorder = {
-    id: 'chartAreaBorder',
-    beforeDraw(chart, args, options) {
-      const { ctx, chartArea: { left, top, width, height } } = chart;
-      ctx.save();
-      ctx.strokeStyle = options.borderColor;
-      ctx.lineWidth = options.borderWidth;
-      ctx.setLineDash(options.borderDash || []);
-      ctx.lineDashOffset = options.borderDashOffset;
-      ctx.strokeRect(left, top, width, height);
-      ctx.restore();
-    },
-  };
   
   export default {
     name: 'HelloWorld',
@@ -73,10 +61,10 @@
           { 
             text: 'Measurement', 
             value: 'measurement',
-            filter: value => {
+            filter: measurement => {
               if (!this.measurementFilter) return true
 
-              return value < parseInt(this.measurementFilter)
+              return measurement < parseInt(this.measurementFilter)
             },
           },
           { 
@@ -84,12 +72,28 @@
             value: 'unit' 
           },
         ],
+        stamps: [],
         values: [],
         sensorTypeFilter:'',
         measurementFilter:'',
         types: ['INSOLATION', 'NOISE', 'TEMPERATURE', 'HUMIDITY', ''],
+        chart: undefined,
       }
-   },
+   }, 
+    watch: {
+      sensorTypeFilter: {
+        handler() {
+          this.stamps = this.values.filter((x)=>{return x.type === this.sensorTypeFilter}).map(s => s.measurement);
+          console.log(this.stamps);
+          this.chart.data.labels = [...Array(this.stamps.length).keys()];
+          this.chart.data.datasets[0].data = this.stamps;
+          this.chart.data.datasets[0].label = this.sensorTypeFilter;
+          this.chart.update();
+        },
+        // force eager callback execution
+        immediate: true
+      },
+    },
     methods: {
       generateCSV() {
         console.log("generate csv");
@@ -103,7 +107,7 @@
         }
         if (this.measurementFilter !== '') {
           a = a.filter((x) => {
-            return x.value < parseInt(this.measurementFilter)
+            return parseInt(x.measurement) < parseInt(this.measurementFilter)
           })
         }
         a.forEach((row) => {
@@ -111,7 +115,7 @@
           csv += ','
           csv += row.name
           csv += ','
-          csv += row.value
+          csv += row.measurement
           csv += ','
           csv += row.unit
           csv += "\n";
@@ -124,47 +128,50 @@
       },
       generateJSON() {
         console.log("generate json");
-      },
-      generatePlot() {
-        if (this.sensorTypeFilter) {
-          let stamps_o = this.values.filter((x)=>{return x.type === this.sensorTypeFilter})
-          let stamps = stamps_o.map(s => s.value)
-          let ctx = document.getElementById('myChart').getContext('2d');
-          this.chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              datasets: [
-                {
-                  color: '#fff',
-                  label: this.sensorTypeFilter,
-                  data: stamps,
-                  backgroundColor: '#003183',
-                  borderWidth: 2,
-                },
-              ],
-              labels: [...Array(stamps.length).keys()],
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                chartAreaBorder: {
-                  borderColor: 'white',
-                  borderWidth: 0,
-                  borderDash: [0, 0],
-                  borderDashOffset: 2,
-                },
-              },
-            },
-            plugins: [chartAreaBorder],
-          });
-          this.chart.resize(0, window.innerHeight - 64 - 24 - 161 - 16 - 24);
+        let table = []
+        if (this.sensorTypeFilter === '') {
+          table = this.values
         }
-      }
+        else{
+          table = this.values.filter((x)=>{return x.type === this.sensorTypeFilter})
+        }
+        if (this.measurementFilter !== '') {
+          table = table.filter((x) => {
+            return parseInt(x.measurement) < parseInt(this.measurementFilter)
+          })
+        }
+        const data = JSON.stringify(table)
+        const blob = new Blob([data], {type: 'text/plain'})
+        const e = document.createEvent('MouseEvents'),
+            a = document.createElement('a');
+        a.download = "test.json";
+        a.href = window.URL.createObjectURL(blob);
+        a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
+        e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        a.dispatchEvent(e);
+      },
     },
     async created(){
-      console.log(await (await axios.get("http://localhost:18015/sensor")).data);
       this.values = await (await axios.get("http://localhost:18015/sensor")).data;
+      this.stamps = this.values.filter((x)=>{return x.type === this.sensorTypeFilter}).map(s => s.measurement);
+    },
+    mounted(){
+      const labels = ['1', '2', '3', '4', '5', '6', '7']
+      const ctx = document.getElementById('myChart').getContext('2d');
+      this.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'My First Dataset',
+            data: [65, 59, 80, 81, 56, 55, 40],
+            fill: false,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          }]
+        }
+      });
+      this.chart.resize(0, window.innerHeight - 64 - 24 - 161 - 16 - 24);
     }
   }
 </script>

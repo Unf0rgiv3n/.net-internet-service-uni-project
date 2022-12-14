@@ -16,6 +16,8 @@ services:
     restart: on-failure
     depends_on:
       - si_180152_rabbit
+    volumes:
+      - ./front_app:/app
   si_180152_generator:
     build: ./generator
     restart: on-failure
