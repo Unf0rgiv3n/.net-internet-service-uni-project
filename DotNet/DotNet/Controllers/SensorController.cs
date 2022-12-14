@@ -20,4 +20,22 @@ public class SensorController: ControllerBase
     {
         return _sensorService.Get();
     }
+
+    [HttpGet("GetByName/{name}")]
+    public ActionResult<List<Sensor>> GetByName(string name, string order)
+    {
+        return _sensorService.GetByName(name, order);
+    }
+    
+    [HttpGet("GetByRoom/{room}")]
+    public ActionResult<List<Sensor>> GetByRoom(string room, string order)
+    {
+        return _sensorService.GetByRoom(room, order);
+    }
+    
+    [HttpGet("GetByType/{type}")]
+    public ActionResult<List<Sensor>> GetByType(string type, string order)
+    {
+        return _sensorService.GetByType(type, order);
+    }
 }
